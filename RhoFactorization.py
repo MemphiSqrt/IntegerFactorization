@@ -2,7 +2,7 @@ from Util import prime_size
 from random import randint
 import time
 
-prime = prime_size(15)
+prime = prime_size(20)
 
 
 def gcd(a, b):
