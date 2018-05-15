@@ -14,7 +14,8 @@ def dixon(n):
         def number2vector(x):
             vec = []
             xor_vec = 0
-            if x == 0: return vec, -1, False;
+            if x == 0:
+                return vec, -1, False
             for i in prime_table:
                 counter = 0
                 while x % i == 0:
@@ -67,10 +68,9 @@ def dixon(n):
                 return z
             return 1
 
-        # in_number = ceil(sqrt(n))
+        in_number = ceil(sqrt(n))
         while True:
             # print(in_number)
-            in_number = randint(1, n)
             print(in_number)
             flag, labels = check_list(in_number * in_number, number2vector(in_number * in_number % n))
             if flag:
@@ -78,7 +78,7 @@ def dixon(n):
                 if z != 1:
                     return z
                 break
-            # in_number += 1
+            in_number += 1
 
 
 factor = dixon(1000000016000000063)
