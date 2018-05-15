@@ -4,8 +4,8 @@ from random import randint
 
 # parameters
 prime_check = prime_size(40)
-prime_cnt = 1000
-prime_elect_cnt = 400
+prime_cnt = 50000
+prime_elect_cnt = 1000
 
 
 def power(x, v, p):
@@ -88,12 +88,6 @@ def quadratic(num):
 
     # make prime and initialize
     prime = prime_size(prime_cnt)
-    prime_set = [[]] * prime_cnt
-    # initialize for quadratic residue
-    for i in range(prime_cnt):
-        prime_set[i] = [[] for _ in range(prime[i])]
-        for j in range(prime[i]):
-            prime_set[i][j ** 2 % prime[i]].append(j)
 
     def quadratic_iteration(n):
         if isprime(n):
@@ -168,22 +162,18 @@ def quadratic(num):
             prime_table = []
             quadratic_res = []
             for i in range(prime_cnt):
-                if len(prime_set[i][n % prime[i]]) != 0:
-                    # have quadratic residue
-                    res = n % prime[i] # save mod value to accelerate program
-                    if res == 0:
-                        factor.append(prime[i])
-                        quadratic_iteration(n // prime[i])
-                        return
+                res = n % prime[i]  # save mod value to accelerate program
+                if res == 0:
+                    factor.append(prime[i])
+                    quadratic_iteration(n // prime[i])
+                    return
+                ans = quadratic_residue(res, prime[i])
+                if ans != -1:
+                    # print('work here')
                     prime_table.append(prime[i])
-                    tmp = set({positive_mod(prime_set[i][res][0] - sqrt_n, prime[i])})
-                    # if res is not 0, there's two quadratic residues
+                    tmp = set({positive_mod(ans - sqrt_n, prime[i])})
                     if prime[i] != 2:
-                        if len(prime_set[i][res]) < 2:
-                            print('debug plz! error 4')
-                            print('prime now is {}'.format(prime[i]))
-                            exit(0)
-                        tmp.update({positive_mod(prime_set[i][res][1] - sqrt_n, prime[i])})
+                        tmp.update({positive_mod(prime[i] - ans - sqrt_n, prime[i])})
                     quadratic_res.append(tmp)
                 if len(prime_table) == prime_iter:
                     break
@@ -234,8 +224,8 @@ def quadratic(num):
     return factor
 
 
-number = randint(1, 10 ** 30)
-# number = 74756495428169733753
+# number = randint(1, 10 ** 30)
+number = 185973555860945113635077869988
 print('number = {}'.format(number))
 factor = quadratic(number)
 print(factor)
