@@ -1,12 +1,8 @@
-from Util import prime_size
+from Util import *
 from random import randint
 import time
 
 prime = prime_size(20)
-
-
-def gcd(a, b):
-    return a if b == 0 else gcd(b, a % b)
 
 
 def power(x, v, p):
@@ -80,7 +76,7 @@ def rho(num):
 
 print(prime)
 start_time = time.time()
-number = randint(1, 10 ** 40)
+number = randint(1, 10 ** 50)
 print(number)
 print(rho(number))
 end_time = time.time()

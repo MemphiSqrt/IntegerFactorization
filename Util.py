@@ -1,3 +1,7 @@
+pow_range = 4000
+prime_range = 1000000
+
+
 def gcd(x, y):
     return x if y == 0 else gcd(y, x % y)
 
@@ -26,15 +30,15 @@ def prime_gan(n):
     return prime
 
 
-prime_list = prime_gan(1000000)
+prime_list = prime_gan(prime_range)
 
 
 def prime_size(n):
     return prime_list[:n]
 
 
-pow2 = [1] * 1000
-for i in range(1, 1000):
+pow2 = [1] * pow_range
+for i in range(1, pow_range):
     pow2[i] = pow2[i-1] * 2
 
 

@@ -1,11 +1,11 @@
 from Util import *
-from math import sqrt, ceil
 from random import randint
 
 # parameters
 prime_check = prime_size(40)
 prime_cnt = 50000
-prime_elect_cnt = 1000
+prime_elect_cnt = 3000
+block_size = 1000000
 
 
 def power(x, v, p):
@@ -161,20 +161,31 @@ def quadratic(num):
             equation_vec = [[] for _ in range(prime_iter)]
             prime_table = []
             quadratic_res = []
+
             for i in range(prime_cnt):
-                res = n % prime[i]  # save mod value to accelerate program
-                if res == 0:
+                if n % prime[i] == 0:
                     factor.append(prime[i])
                     quadratic_iteration(n // prime[i])
                     return
+
+            link = [[[] for _ in range(block_size)] for _ in range(2)]
+            status = 0
+            for i in range(prime_cnt):
+                if prime[i] > block_size:
+                    print('debug plz! error 5')
+                    exit(0)
+
+                res = n % prime[i]  # save mod value to accelerate program
                 ans = quadratic_residue(res, prime[i])
                 if ans != -1:
                     # print('work here')
+                    it_ind = len(prime_table)
                     prime_table.append(prime[i])
-                    tmp = set({positive_mod(ans - sqrt_n, prime[i])})
+                    uk = positive_mod(ans - sqrt_n, prime[i])
+                    link[status][uk].append(it_ind)
                     if prime[i] != 2:
-                        tmp.update({positive_mod(prime[i] - ans - sqrt_n, prime[i])})
-                    quadratic_res.append(tmp)
+                        uk = positive_mod(prime[i] - ans - sqrt_n, prime[i])
+                        link[status][uk].append(it_ind)
                 if len(prime_table) == prime_iter:
                     break
 
@@ -186,31 +197,35 @@ def quadratic(num):
             print(prime_table)
 
             number_iter = 0
+            block_count = -1
+            status = 1
             while True:
+                if number_iter % block_size == 0:
+                    # del link[status]    #  = [[] for _ in range(block_size)]
+                    link[status] = [[] for _ in range(block_size)]
+                    status ^= 1
+                    block_count += 1
                 y_value = y_f(number_iter)
-                if number_iter < 10:
-                    print('number iter = {}, y_value = {}'.format(number_iter, y_value))
 
-                pow2 = 1
                 xor_vector = 0
-                bit_vec = []
-                for i in range(prime_iter):
-                    if (number_iter % prime_table[i]) in quadratic_res[i]:
-                        if y_value % prime_table[i] != 0:
-                            print('debug plz! error 1 ')
-                            exit(0)
-                        else:
-                            y_value //= prime_table[i]
-                            xor_vector |= pow2
-                        bit_vec.append(1)
+                tmp_dis = block_count * block_size
+                for i in link[status][number_iter - tmp_dis]:
+                    p = prime_table[i]
+                    if y_value % p != 0:
+                        print('debug plz! error 1 ')
+                        exit(0)
                     else:
-                        bit_vec.append(0)
-                    pow2 <<= 1
+                        y_value //= p
+                        xor_vector |= get_pow2(i)
+                    if number_iter + p >= tmp_dis + block_size:
+                        link[status ^ 1][number_iter + p - tmp_dis - block_size].append(i)
+                    else:
+                        link[status][number_iter + p - tmp_dis].append(i)
+
                 if y_value == 1:
                     print('prime_base cnt = {}, number iter = {}, count = {}'.format(prime_iter, number_iter, linear_inde[0]))
                     # print(sqrt_n + number_iter)
                     number_set = set({number_iter})
-                    # if number_iter in [33, 326, 811, 267, 156, 511]: print('value = {}, iter = {}'.format(bit_vec, number_iter))
                     flag, result_set = linear_equation(xor_vector, number_set)
                     if flag:
                         if check(result_set):
@@ -224,8 +239,8 @@ def quadratic(num):
     return factor
 
 
-# number = randint(1, 10 ** 30)
-number = 185973555860945113635077869988
+number = randint(1, 10 ** 30)
+# number = 15347
 print('number = {}'.format(number))
 factor = quadratic(number)
 print(factor)
