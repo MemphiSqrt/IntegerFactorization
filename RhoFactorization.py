@@ -72,12 +72,21 @@ def rho(num):
 
     rho_iteration(num)
     return factor
+    
+
+def makeprime(limit):
+    while True:
+        z = randint(limit - 100000, limit)
+        if isprime(z):
+            return z
 
 
-print(prime)
-start_time = time.time()
-number = randint(1, 10 ** 50)
-print(number)
-print(rho(number))
-end_time = time.time()
-print(end_time - start_time)
+def test(number):
+    print('number = {}'.format(number))
+    start_time = time.time()
+    print(rho(number))
+    end_time = time.time()
+    print('time = {}'.format(end_time - start_time))
+    timec = end_time - start_time
+    return timec
+    
