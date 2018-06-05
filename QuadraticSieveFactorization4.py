@@ -1,6 +1,7 @@
 # from Util import *
 from random import randint
 from time import time
+import math
 
 # parameters
 prime_size_cnt = 40
@@ -44,6 +45,13 @@ prime_list = prime_gan(prime_range)
 
 def prime_size(n):
     return prime_list[:n]
+
+
+def get_prime_upper(x):
+    i = 0
+    while prime[i] <= x:
+        ++i
+    return prime_list[:i]
 
 
 pow2 = [1] * pow_range
@@ -124,7 +132,7 @@ def quadratic_residue(a, p):
 
 
 # make prime and initialize
-prime = prime_size(prime_cnt)
+# prime = prime_size(prime_cnt)
 
 def y_f(x, sqrt_n, n):
     return (x + sqrt_n) ** 2 - n
@@ -186,7 +194,9 @@ def check(index_set, n, sqrt_n):
         return quadratic(n // z) + quadratic(z)
     return []
 
+
 alltime = 0
+prime = prime_size(prime_cnt)
 
 def quadratic(n):
     # factor_clear()
@@ -200,110 +210,120 @@ def quadratic(n):
     print('n = {}, sqrt of n = {}'.format(n, sqrt_n))
     # exit(0)
 
+    prime_a = math.log(n)
+    prime_b = math.log(prime_a)
+    prime_limit = math.ceil((math.e ** ((prime_a * prime_b) ** 0.5)) ** (2 ** 0.5 / 4))
+    print('prime_limit = {}'.format(prime_limit))
+    prime_iter = 0
+
     anslis = []
-    for prime_iter in range(prime_elect_cnt, prime_elect_cnt + 1000):
-        global equation_set
-        global equation_vec
-        global linear_inde
-        linear_inde = [0]
-        equation_set = [set() for _ in range(prime_iter)]
-        equation_vec = [[] for _ in range(prime_iter)]
-        prime_table = []
-        quadratic_res = []
+    prime_table = []
 
-        for i in range(prime_cnt):
-            if n % prime[i] == 0:
-                anslis.append(prime[i])
-                anslis = anslis + quadratic(n // prime[i])
-                return anslis
+    for i in range(prime_cnt):
+        if n % prime[i] == 0:
+            anslis.append(prime[i])
+            anslis = anslis + quadratic(n // prime[i])
+            return anslis
 
-        link = [[[] for _ in range(block_size)] for _ in range(2)]
-        status = 0
+    link = [[[] for _ in range(block_size)] for _ in range(2)]
+    status = 0
         
-        
-        for i in range(prime_cnt):
-            if prime[i] > block_size:
-                print('debug plz! error 5')
-                exit(0)
 
-            res = n % prime[i]  # save mod value to accelerate program
-            
-            ans = quadratic_residue(res, prime[i])
-            
-            if ans != -1:
-                # print('work here')
-                it_ind = len(prime_table)
-                prime_table.append(prime[i])
-                uk = positive_mod(ans - sqrt_n, prime[i])
-                link[status][uk].append(it_ind)
-                if prime[i] != 2:
-                    uk = positive_mod(prime[i] - ans - sqrt_n, prime[i])
-                    link[status][uk].append(it_ind)
-            if len(prime_table) == prime_iter:
-                break
-        
-        if len(prime_table) < prime_iter:
-            print('prime cnt is not enough!')
-            print('prime iter = {}'.format(prime_iter))
+    flag_prime = False
+    for i in range(prime_cnt):
+        if prime[i] > block_size:
+            print('debug plz! error 5')
             exit(0)
 
-        print(prime_table)
-
-        number_iter = 0
-        block_count = -1
-        status = 1
-        while True:
-            if number_iter % block_size == 0:
-                # del link[status]    #  = [[] for _ in range(block_size)]
-                link[status] = [[] for _ in range(block_size)]
-                status ^= 1
-                block_count += 1
-            y_value = y_f(number_iter, sqrt_n, n)
-
-
-            xor_vector = 0
-            tmp_dis = block_count * block_size
+        res = n % prime[i]  # save mod value to accelerate program
             
-            # global alltime
+        ans = quadratic_residue(res, prime[i])
+
+        if ans != -1:
+            # print('work here')
+            it_ind = len(prime_table)
+            prime_table.append(prime[i])
+            uk = positive_mod(ans - sqrt_n, prime[i])
+            link[status][uk].append(it_ind)
+            prime_iter += 1
+            if prime[i] != 2:
+                uk = positive_mod(prime[i] - ans - sqrt_n, prime[i])
+                link[status][uk].append(it_ind)
+        if prime_iter == 3000:
+        #if prime[i] > prime_limit:
+            flag_prime = True
+            break
+        
+    if not flag_prime:
+        print('prime cnt is not enough!')
+        print('prime cnt = {}'.format(prime_cnt))
+        exit(0)
+
+    global equation_set
+    global equation_vec
+    global linear_inde
+    linear_inde = [0]
+    equation_set = [set() for _ in range(prime_iter)]
+    equation_vec = [[] for _ in range(prime_iter)]
+
+    print('prime_iter = {}'.format(prime_iter))
+
+    number_iter = 0
+    block_count = -1
+    status = 1
+    while True:
+        if number_iter % block_size == 0:
+            # del link[status]    #  = [[] for _ in range(block_size)]
+            link[status] = [[] for _ in range(block_size)]
+            status ^= 1
+            block_count += 1
+        y_value = y_f(number_iter, sqrt_n, n)
+
+
+        xor_vector = 0
+        tmp_dis = block_count * block_size
             
-            for i in link[status][number_iter - tmp_dis]:
-                p = prime_table[i]
-                if y_value % p != 0:
-                    print('debug plz! error 1 ')
-                    exit(0)
-                else:
-                    y_value //= p
-                    xor_vector |= get_pow2(i)
-                if number_iter + p >= tmp_dis + block_size:
-                    link[status ^ 1][number_iter + p - tmp_dis - block_size].append(i)
-                else:
-                    link[status][number_iter + p - tmp_dis].append(i)
+        # global alltime
+            
+        for i in link[status][number_iter - tmp_dis]:
+            p = prime_table[i]
+            if y_value % p != 0:
+                print('debug plz! error 1 ')
+                exit(0)
+            else:
+                y_value //= p
+                xor_vector |= get_pow2(i)
+            if number_iter + p >= tmp_dis + block_size:
+                link[status ^ 1][number_iter + p - tmp_dis - block_size].append(i)
+            else:
+                link[status][number_iter + p - tmp_dis].append(i)
                 
                 
-            if y_value == 1:
-                print('prime_base cnt = {}, number iter = {}, count = {}'.format(prime_iter, number_iter, linear_inde[0]))
-                # print(sqrt_n + number_iter)
-                number_set = set({number_iter})
-                flag, result_set = linear_equation(xor_vector, number_set, prime_iter)
-                if flag:
-                    # alltime -= time()
-                    zic = check(result_set, n, sqrt_n)
-                    # alltime += time()
-                    if zic:
-                        
-                        return zic
-                    else:
-                        print('break!')
-                        # break
+        if y_value == 1:
+            print('prime_iter = {}, number iter = {}, count = {}'.format(prime_iter, number_iter, linear_inde[0]))
+            # print(sqrt_n + number_iter)
+            number_set = set({number_iter})
+            flag, result_set = linear_equation(xor_vector, number_set, prime_iter)
+            if flag:
+                # alltime -= time()
+                zic = check(result_set, n, sqrt_n)
+                # alltime += time()
+                if zic:
+                    return zic
+                else:
+                    print('break!')
+                    # break
             
             
-            number_iter += 1
-            
+        number_iter += 1
+
+
 def makeprime(limit):
     while True:
         z = randint(limit - 100000, limit)
         if isprime(z):
             return z
+
 
 def test(number):
     # number = 777796089990233610621609434355
@@ -317,5 +337,5 @@ def test(number):
     return timec
 
 
-# test(makeprime(10 ** 20) * makeprime(10 ** 20))
+test(makeprime(10 ** 15) * makeprime(10 ** 15))
 
