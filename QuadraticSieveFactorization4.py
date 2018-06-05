@@ -337,5 +337,5 @@ def test(number):
     return timec
 
 
-test(makeprime(10 ** 15) * makeprime(10 ** 15))
+#test(makeprime(10 ** 15) * makeprime(10 ** 15))
 
