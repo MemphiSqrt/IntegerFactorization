@@ -14,7 +14,7 @@ const int PRIME_CHECK_CNT = 40;
 const int PRIME_LIM = 2000;
 const int PRIME_CNT = 50000;
 const int PRIME_UPP = 1000000;
-const int SIEVE_CHUNK = 1000000;
+const int SIEVE_CHUNK = 2000000;
 
 double temper[SIEVE_CHUNK];
 int prime[PRIME_CNT], p[PRIME_UPP], nip[SIEVE_CHUNK];
@@ -228,30 +228,32 @@ void quadratic_sieve(Int n) {
 	//rep(i,0,list_size-1) printf("%d ", list_prime[i]); puts("");
 	//rep(i,0,list_size-1) printf("%d ", positive_mod(list_res[i] - sqrt_n, list_prime[i])); puts("");
 	//exit(0);
-	double lastE = 0;
-	Int nextE = 1, las = sqrt_n, egol = sqrt_n * sqrt_n;
+	int lastE = 0;
+	Int nextE = 1, las = sqrt_n, egol = sqrt_n * sqrt_n, fornext = nextE;
 	for(int round = 0;; round++) {
 		Int base = (Int) round * SIEVE_CHUNK + sqrt_n;
+		fornext = nextE - base;
 
-		//TT_clock -= clock();
 		for(register int i = 0; i < SIEVE_CHUNK; i++) {
-			if (i + base >= nextE) {
+			if (i >= fornext) {
 				Int delta = i + base - las;
 				Int Z = egol + (delta * delta) + (2 * delta * las);
 				egol = Z;
 				las = i + base;
 				lastE = log2(Z - n);
 				nextE = nextE * 9 / 5 + 1;
+				fornext = nextE - base;
+				temper[i] = lastE;
 			}
 			temper[i] = lastE;
 		//	link[i].clear();
 		}
-		//TT_clock += clock();
 
 		//cout<<temper[0]<<endl;
+		TT_clock -= clock();
 		rep(i, 0, list_size - 1) {
 			int p = list_prime[i];
-			double logp = log2((double)p);
+			float logp = log2((float)p);
 			int res = list_res[i];
 			int min_x = positive_mod(res - base, p);
 			//printf("%d\n",min_x);
@@ -269,6 +271,7 @@ void quadratic_sieve(Int n) {
 			}
 			//cout<<"~"<<temper[0]<<" "<<p<<endl;
 		}
+		TT_clock += clock();
 		*nip = 0;
 		rep(i, 0, SIEVE_CHUNK - 1) if (temper[i] < 1) {
 			//printf("%d\n",i);
@@ -283,7 +286,7 @@ void quadratic_sieve(Int n) {
 		}
 		rep(i, 0, list_size - 1) {
 			int p = list_prime[i];
-			double logp = log2((double)p);
+			float logp = log2((float)p);
 			int res = list_res[i];
 			int min_x = positive_mod(res - base, p);
 			//printf("%d\n",min_x);
@@ -358,8 +361,8 @@ int main() {
 	//exit(0);
 	int bee = clock();
 	quadratic_sieve(inp);
-	printf("time = %lf\n",(double)(clock()-bee)/1000000);
-	printf("partial time = %'f\n", (double) TT_clock / 1000000);
+	printf("time = %lf\n",(float)(clock()-bee)/1000000);
+	printf("partial time = %'f\n", (float) TT_clock / 1000000);
 	rep(i,0,ans.size()-1) cout<<ans[i]<<",";
 	puts("");
 	//rep(i, 0, 100) printf("%d ", prime[i]);
