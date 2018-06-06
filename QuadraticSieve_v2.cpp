@@ -12,13 +12,13 @@ typedef mpz_class Int;
 #define dep(i,x,y) for(int i = x;i >= y; --i)
 
 const int PRIME_CHECK_CNT = 40;
-const int PRIME_LIM = 2000;
+const int PRIME_LIM = 3000;
 const int PRIME_CNT = 60000;
 const int PRIME_UPP = 1000000;
-const int SIEVE_CHUNK = 100000;
+const int SIEVE_CHUNK = 2000000;
 
 double temper[SIEVE_CHUNK];
-int prime[PRIME_CNT], p[PRIME_UPP];
+int prime[PRIME_CNT], p[PRIME_UPP], nip[SIEVE_CHUNK];
 vector<int> link[SIEVE_CHUNK];
 //bool ele_prime[SIEVE_CHUNK];
 
@@ -248,11 +248,10 @@ void quadratic_sieve(Int n) {
 				temper[i] = lastE;
 			}
 			temper[i] = lastE;
-			link[i].clear();
+		//	link[i].clear();
 		}
 
 		//cout<<temper[0]<<endl;
-		TT_clock -= clock();
 		rep(i, 0, list_size - 1) {
 			int p = list_prime[i];
 			float logp = log2((float)p);
@@ -262,7 +261,6 @@ void quadratic_sieve(Int n) {
 			//printf("%d\n",min_x);
 			while (min_x < SIEVE_CHUNK) {
 				temper[min_x] -= logp;
-				link[min_x].push_back(i);
 				min_x += p;
 			}
 			if (p != 2) {
@@ -270,58 +268,94 @@ void quadratic_sieve(Int n) {
 				min_x = (basemod + res) % p;
 				while (min_x < SIEVE_CHUNK) {
 					temper[min_x] -= logp;
+					min_x += p;
+				}
+			}
+			//cout<<"~"<<temper[0]<<" "<<p<<endl;
+		}
+		*nip = 0;
+		rep(i, 0, SIEVE_CHUNK - 1) if (temper[i] < 1) {
+			//printf("%d\n",i);
+			nip[++*nip] = i;
+		}
+		rep(i, 0, SIEVE_CHUNK - 1) {
+			temper[i] = -1;
+		}
+		rep(i, 1, *nip) {
+			temper[nip[i]] = log2(y_f(nip[i], base, n));
+			link[nip[i]].clear();
+		}
+		TT_clock -= clock();
+		rep(i, 0, list_size - 1) {
+			int p = list_prime[i];
+			float logp = log2((float)p);
+			int res = list_res[i];
+			int min_x = positive_mod(res - base, p);
+			//printf("%d\n",min_x);
+			while (min_x < SIEVE_CHUNK) {
+				if (temper[min_x] > 0) {
+					temper[min_x] -= logp;
 					link[min_x].push_back(i);
+				}
+				min_x += p;
+			}
+			if (p != 2) {
+				res = p - res;
+				min_x = positive_mod(res - base, p);
+				while (min_x < SIEVE_CHUNK) {
+					if (temper[min_x] > 0) {
+						temper[min_x] -= logp;
+						link[min_x].push_back(i);
+					}
 					min_x += p;
 				}
 			}
 			//cout<<"~"<<temper[0]<<" "<<p<<endl;
 		}
 		TT_clock += clock();
-		float logmxp = log2(list_prime[list_size - 1]);
-		rep(i, 0, SIEVE_CHUNK - 1) if (fabs(temper[i]) < logmxp) {
-			Int y = (i + base) * (i + base) - n;
+		rep(i, 0, SIEVE_CHUNK - 1) if (temper[i] < 1 && temper[i] > 0) {
+			//printf("%d\n", i);
 			Ax.reset();
 			dep(j, link[i].size() - 1, 0) {
-			//rep(j, 0, list_size - 1) {
-				int z = 0;
-				while (y % list_prime[link[i][j]] == 0) {
-					z ^= 1;
-					y /= list_prime[link[i][j]];
-				}
-				Ax[link[i][j]] = z;
+			//	printf("%d ", link[i][j]);
+				Ax[link[i][j]] = 1;
 			}
-			if (y == 1) {
-				id[A_cnt] = i + round * SIEVE_CHUNK;
-				idAx.reset();
-				idAx[A_cnt] = 1;
-				T.reset();
-				T[0] = 1;
-				//cout<<(T & Ax)[0]<<endl;
-				bool flag = true;
-				for(int j = 0; j < PRIME_LIM; j++, T <<= 1) if ((T & Ax)[j]) {
-					//if (A_cnt == 2) {
-					//	printf("!A_cnt = %d, %d\n",A_cnt, i);
-					//}
-					if ((T & A[j])[j]) {
-						Ax ^= A[j];
-						idAx ^= idA[j];
-					}
-					else {
-						A[j] = Ax;
-						idA[j] = idAx;
-						flag = false;
-						break;
-					}
+			//puts("");
+			id[A_cnt] = i + round * SIEVE_CHUNK;
+			idAx.reset();
+			idAx[A_cnt] = 1;
+			T.reset();
+			T[0] = 1;
+			//cout<<(T & Ax)[0]<<endl;
+			bool flag = true;
+			for(int j = 0; j < PRIME_LIM; j++, T <<= 1) if ((T & Ax)[j]) {
+				//if (A_cnt == 2) {
+				//	printf("!A_cnt = %d, %d\n",A_cnt, i);
+				//}
+				if ((T & A[j])[j]) {
+					Ax ^= A[j];
+					idAx ^= idA[j];
 				}
-				if (flag) {
-					if (check(sqrt_n, n, idAx)) {
-						return;
-					}
+				else {
+					A[j] = Ax;
+					idA[j] = idAx;
+					flag = false;
+					break;
 				}
-				A_cnt++;
-				printf("....%d/%d", A_cnt, PRIME_LIM);
-				cout<<", number - sqrt{n} = "<<i + round * SIEVE_CHUNK<<endl;
 			}
+			if (flag) {
+				//rep(j, 0, PRIME_LIM - 1) printf("%d ", (int)idAx[j]);
+				//exit(0);
+
+				//TT_clock += clock();
+				if (check(sqrt_n, n, idAx)) {
+				//TT_clock += clock();
+					return;
+				}
+			}
+			A_cnt++;
+			printf("....%d/%d", A_cnt, PRIME_LIM);
+			cout<<", number - sqrt{n} = "<<i + round * SIEVE_CHUNK<<endl;
 		}
 
 	}
