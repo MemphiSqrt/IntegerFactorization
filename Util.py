@@ -33,6 +33,13 @@ def prime_gan(n):
 prime_list = prime_gan(prime_range)
 
 
+def prime_n_limit(lim):
+    for i in range(prime_range):
+        if prime_list[i] > lim:
+            return i
+    return -1
+
+
 def prime_size(n):
     return prime_list[:n]
 

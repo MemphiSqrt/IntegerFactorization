@@ -9,6 +9,11 @@ def makeprime(limit):
         if isprime(z):
             return z
 
+x = int(input())
+print((randint(10, 10 ** (2 * x))))
+print((makeprime(10 ** x) * (makeprime(10 ** x))))
+exit(0)
+
 #f = open('output.csv','w')
 #print('bits\tnumber\tquadratic\trho', file = f)
 #f.close()

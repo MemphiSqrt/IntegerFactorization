@@ -5,17 +5,17 @@
 #include <gmp.h>
 #include <ctime>
 #include <cmath>
-#include <thread>
+//#include <thread>
 using namespace std;
 typedef mpz_class Int;
 #define rep(i,x,y) for(int i = x;i <= y; ++i)
 #define dep(i,x,y) for(int i = x;i >= y; --i)
 
 const int PRIME_CHECK_CNT = 40;
-const int PRIME_LIM = 2000;
-const int PRIME_CNT = 60000;
-const int PRIME_UPP = 1000000;
-const int SIEVE_CHUNK = 100000;
+const int PRIME_LIM = 39336;
+const int PRIME_CNT = 200000;
+const int PRIME_UPP = 5000000;
+const int SIEVE_CHUNK = 500000;
 
 double temper[SIEVE_CHUNK];
 int prime[PRIME_CNT], p[PRIME_UPP];
@@ -186,6 +186,36 @@ bool check(const Int &sqrt_n, const Int &n, const bitset<PRIME_LIM> &C) {
 	return false;
 }
 
+vector<int> list_prime, list_res;
+mutex locker;
+
+void work_thread(int i, const Int &base) {
+	int p = list_prime[i];
+	float logp = log2((float)p);
+	int res = list_res[i];
+	int basemod = positive_mod(-base, p);
+	int min_x = (basemod + res) % p;
+	//printf("%d\n",min_x);
+	while (min_x < SIEVE_CHUNK) {
+		locker.lock();
+		temper[min_x] -= logp;
+		link[min_x].push_back(i);
+		locker.unlock();
+		min_x += p;
+	}
+	if (p != 2) {
+		res = p - res;
+		min_x = (basemod + res) % p;
+		while (min_x < SIEVE_CHUNK) {
+			locker.lock();
+			temper[min_x] -= logp;
+			link[min_x].push_back(i);
+			locker.unlock();
+			min_x += p;
+		}
+	}
+}
+
 int TT_clock = 0;
 
 void quadratic_sieve(Int n) {
@@ -202,7 +232,8 @@ void quadratic_sieve(Int n) {
 	}
 
 	int list_size = 0;
-	vector<int> list_prime, list_res;
+	list_prime.clear();
+	list_res.clear();
 	bool flag_prime = false;
 	rep(i, 0, PRIME_CNT - 1) {
 		int modn = toInt(n % prime[i]);
@@ -236,7 +267,7 @@ void quadratic_sieve(Int n) {
 		Int base = (Int) round * SIEVE_CHUNK + sqrt_n;
 		fornext = nextE - base;
 
-		for(register int i = 0; i < SIEVE_CHUNK; i++) {
+		for(int i = 0; i < SIEVE_CHUNK; i++) {
 			if (i >= fornext) {
 				Int delta = i + base - las;
 				Int Z = egol + (delta * delta) + (2 * delta * las);
@@ -253,7 +284,7 @@ void quadratic_sieve(Int n) {
 
 		//cout<<temper[0]<<endl;
 		TT_clock -= clock();
-		rep(i, 0, list_size - 1) {
+		for (int i = 0; i < list_size; i+= 1) {
 			int p = list_prime[i];
 			float logp = log2((float)p);
 			int res = list_res[i];
@@ -261,20 +292,23 @@ void quadratic_sieve(Int n) {
 			int min_x = (basemod + res) % p;
 			//printf("%d\n",min_x);
 			while (min_x < SIEVE_CHUNK) {
+				locker.lock();
 				temper[min_x] -= logp;
 				link[min_x].push_back(i);
+				locker.unlock();
 				min_x += p;
 			}
 			if (p != 2) {
 				res = p - res;
 				min_x = (basemod + res) % p;
 				while (min_x < SIEVE_CHUNK) {
+					locker.lock();
 					temper[min_x] -= logp;
 					link[min_x].push_back(i);
+					locker.unlock();
 					min_x += p;
 				}
 			}
-			//cout<<"~"<<temper[0]<<" "<<p<<endl;
 		}
 		TT_clock += clock();
 		float logmxp = log2(list_prime[list_size - 1]);
@@ -328,9 +362,10 @@ void quadratic_sieve(Int n) {
 }
 
 int main() {
+
 	prime_gen();
 	Int inp;
-	inp = "9999999999992989800000001205532601";
+	inp = "32487208807993085731447745508051016839473802279450";
 	//cout<<ln(inp)<<endl;
 	//exit(0);
 	int bee = clock();
