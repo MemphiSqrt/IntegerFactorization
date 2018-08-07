@@ -1,3 +1,6 @@
+# Usage
+Actually you can only use QuadraticSieve.cpp with gmp.h, which is the fastest code
+
 # IntegerFactorization
 Integer Factorization, Project for Designing of Algorithm (PKU)
 
@@ -13,8 +16,6 @@ Quadratic sieve: https://en.wikipedia.org/wiki/Quadratic_sieve
 # Dependency
 
 ## for cpp
-
-**Actually you can use QuadraticSieve.cpp by cpp only, which is the fastest code**
 
 gmp.h (cpp Multiple Precision Arithmetic Library)
 
